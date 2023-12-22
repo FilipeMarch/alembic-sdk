@@ -1,0 +1,11 @@
+{
+    "editor.formatOnSave": true,
+    "materialkv.pythonFile": "main.py",
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter",
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": "explicit"
+      }
+    }
+  }
+  
