@@ -1,0 +1,2 @@
+[run]
+omit = ./alembic_sdk/env_template.py
