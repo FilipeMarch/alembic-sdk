@@ -32,7 +32,7 @@ def remove_alembic_files():
     remove_alembic_ini()
 
 
-def create_migration_directory(directory_name=MIGRATIONS_DIR, library="sqlalchemy"):
+def create_migration_directory(directory_name=MIGRATIONS_DIR):
     """Create a new migration directory."""
     from alembic import command
     from alembic.config import Config
@@ -46,32 +46,64 @@ def create_migration_directory(directory_name=MIGRATIONS_DIR, library="sqlalchem
     logger.debug(f"Creating migration directory at {directory_name}")
     command.init(alembic_config, MIGRATIONS_DIR)
 
-    if library == "sqlmodel":
-        # add "import sqlmodel" to script.py.mako
-        logger.debug(f"Updating script.py.mako file")
-        with open(f"{directory_name}/script.py.mako", "r") as file:
-            filedata = file.read()
-        line = "import sqlalchemy as sa"
-        filedata = filedata.replace(line, f"{line}\nimport sqlmodel")
-        with open(f"{directory_name}/script.py.mako", "w") as file:
-            file.write(filedata)
+    # add "import sqlmodel" to script.py.mako
+    logger.debug(f"Updating script.py.mako file")
+    with open(f"{directory_name}/script.py.mako", "r") as file:
+        filedata = file.read()
+    line = "import sqlalchemy as sa"
+    filedata = filedata.replace(line, f"{line}\nimport sqlmodel")
+    with open(f"{directory_name}/script.py.mako", "w") as file:
+        file.write(filedata)
 
 
-def create_engine(url, library="sqlalchemy"):
+def edit_env_py(
+    url,
+    import_models_file: str,
+    directory_name=MIGRATIONS_DIR,
+):
+    """
+    Edit the env.py file to add the database url and import models.
+
+    Args:
+        url (str): The database url.
+            E.g.: "sqlite:///database/database.db"
+        import_models_file (str): The file to import models from.
+            E.g.: "folder/file_that_import_models.py"
+    """
+    # read .env_template.py file
+    with open("alembic_sdk/env_template.py", "r") as file:
+        filedata = file.read()
+
+    # after config = context.config,
+    # add config.set_main_option("sqlalchemy.url", url)
+    line = "config = context.config"
+    extra_line = f'config.set_main_option("sqlalchemy.url", "{url}")'
+    filedata = filedata.replace(line, f"{line}\n{extra_line}")
+
+    # After the line "### INSERT NEW MODELS below ###"
+    # add the models from the models.py file
+    line = "### INSERT NEW MODELS below ###"
+    with open(import_models_file, "r") as file:
+        models_filedata = file.read()
+    filedata = filedata.replace(line, f"{line}\n\n{models_filedata}")
+
+    # write the content to env.py
+    with open(f"{directory_name}/env.py", "w") as file:
+        file.write(filedata)
+
+
+def create_engine(url):
     """Create a database engine."""
-    import importlib
+    import sqlmodel
 
-    module = importlib.import_module(library)
-    return module.create_engine(url)
+    return sqlmodel.create_engine(url)
 
 
 def create_db(url, library="sqlalchemy"):
     """Create a database."""
-    import importlib
     import os
 
-    module = importlib.import_module(library)
-    engine = module.create_engine(url)
+    engine = create_engine(url)
 
     if url.startswith("sqlite:///"):
         # Create local folder for sqlite database
@@ -79,13 +111,6 @@ def create_db(url, library="sqlalchemy"):
         if not os.path.exists(folder_name):
             os.makedirs(folder_name)
 
-    if library == "sqlmodel":
-        from sqlmodel import SQLModel
+    from sqlmodel import SQLModel
 
-        SQLModel.metadata.create_all(engine)
-
-    elif library == "sqlalchemy":
-        from sqlalchemy import MetaData
-
-        metadata = MetaData()
-        metadata.create_all(engine)
+    SQLModel.metadata.create_all(engine)
