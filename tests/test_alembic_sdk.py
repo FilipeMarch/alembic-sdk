@@ -1,7 +1,12 @@
-from alembic_sdk import create_migration_directory, remove_alembic_files
+from alembic_sdk import (
+    create_db,
+    create_engine,
+    create_migration_directory,
+    remove_alembic_files,
+)
 from tests.utils import *
 
-logger.disable("alembic_sdk")
+# logger.disable("alembic_sdk")
 
 
 def test_alembic_sdk(environment):
@@ -28,3 +33,31 @@ def test_alembic_sdk(environment):
     remove_alembic_files()
 
     assert os.path.isdir("alembic") == False
+
+    # Create a new engine
+    print(green + "Creating a new engine")
+    engine = create_engine("sqlite:///database/database.db")
+
+    assert engine != None
+
+    # Delete the 'database' folder
+    if os.path.isdir("database"):
+        shutil.rmtree("database")
+
+    # Create a new database using sqlalchemy
+    print(green + "Creating a new database using sqlalchemy")
+    create_db("sqlite:///database/database.db")
+
+    assert os.path.isdir("database") == True
+    assert os.path.isfile("database/database.db") == True
+
+    # Delete the 'database' folder
+    if os.path.isdir("database"):
+        shutil.rmtree("database")
+
+    # Create a new database using sqlmodel
+    print(green + "Creating a new database using sqlmodel")
+    create_db("sqlite:///database/database.db", library="sqlmodel")
+
+    assert os.path.isdir("database") == True
+    assert os.path.isfile("database/database.db") == True
