@@ -33,8 +33,15 @@ def delete_alembic_ini():
         os.remove("alembic.ini")
 
 
+def delete_database_folder():
+    """Delete the 'database' folder."""
+    if os.path.isdir("database"):
+        shutil.rmtree("database")
+
+
 @pytest.fixture()
 def environment():
+    delete_database_folder()
     delete_alembic_folder()
     delete_alembic_ini()
     yield
