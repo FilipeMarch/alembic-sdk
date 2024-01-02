@@ -32,7 +32,7 @@ def remove_alembic_files():
     remove_alembic_ini()
 
 
-def create_migration_directory(directory_name=MIGRATIONS_DIR):
+def create_migration_directory(directory_name=MIGRATIONS_DIR, library="sqlalchemy"):
     """Create a new migration directory."""
     from alembic import command
     from alembic.config import Config
@@ -45,6 +45,16 @@ def create_migration_directory(directory_name=MIGRATIONS_DIR):
     # Create the Alembic environment
     logger.debug(f"Creating migration directory at {directory_name}")
     command.init(alembic_config, MIGRATIONS_DIR)
+
+    if library == "sqlmodel":
+        # add "import sqlmodel" to script.py.mako
+        logger.debug(f"Updating script.py.mako file")
+        with open(f"{directory_name}/script.py.mako", "r") as file:
+            filedata = file.read()
+        line = "import sqlalchemy as sa"
+        filedata = filedata.replace(line, f"{line}\nimport sqlmodel")
+        with open(f"{directory_name}/script.py.mako", "w") as file:
+            file.write(filedata)
 
 
 def create_engine(url, library="sqlalchemy"):
