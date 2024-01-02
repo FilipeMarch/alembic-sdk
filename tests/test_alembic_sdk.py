@@ -2,11 +2,18 @@ from alembic_sdk import (
     create_db,
     create_engine,
     create_migration_directory,
+    edit_env_py,
     remove_alembic_files,
 )
 from tests.utils import *
 
 # logger.disable("alembic_sdk")
+
+
+def delete_database_folder():
+    """Delete the 'database' folder."""
+    if os.path.isdir("database"):
+        shutil.rmtree("database")
 
 
 def test_alembic_sdk(environment):
@@ -28,11 +35,11 @@ def test_alembic_sdk(environment):
     assert os.path.isdir("alembic") == True
     assert os.path.isfile("alembic.ini") == True
 
-    # Remove the migration environment.
-    print(red + "Removing alembic directory and alembic.ini file")
-    remove_alembic_files()
+    # assert that 'sqlmodel' is in script.py.mako
+    with open("alembic/script.py.mako", "r") as file:
+        filedata = file.read()
 
-    assert os.path.isdir("alembic") == False
+    assert "import sqlmodel" in filedata
 
     # Create a new engine
     print(green + "Creating a new engine")
@@ -40,24 +47,24 @@ def test_alembic_sdk(environment):
 
     assert engine != None
 
-    # Delete the 'database' folder
-    if os.path.isdir("database"):
-        shutil.rmtree("database")
-
-    # Create a new database using sqlalchemy
-    print(green + "Creating a new database using sqlalchemy")
+    # Create a new database using sqlmodel
+    print(green + "Creating a new database using sqlmodel")
     create_db("sqlite:///database/database.db")
 
     assert os.path.isdir("database") == True
     assert os.path.isfile("database/database.db") == True
 
-    # Delete the 'database' folder
-    if os.path.isdir("database"):
-        shutil.rmtree("database")
+    # Edit the env.py file
+    print(green + "Editing the env.py file")
+    edit_env_py(
+        url="sqlite:///database/database.db",
+        import_models_file="tests/import_models.py",
+    )
 
-    # Create a new database using sqlmodel
-    print(green + "Creating a new database using sqlmodel")
-    create_db("sqlite:///database/database.db", library="sqlmodel")
+    delete_database_folder()
 
-    assert os.path.isdir("database") == True
-    assert os.path.isfile("database/database.db") == True
+    # Remove the migration environment.
+    print(red + "Removing alembic directory and alembic.ini file")
+    remove_alembic_files()
+
+    assert os.path.isdir("alembic") == False
