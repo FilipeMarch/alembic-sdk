@@ -99,7 +99,7 @@ def create_engine(url):
     return sqlmodel.create_engine(url)
 
 
-def create_db(url, library="sqlalchemy"):
+def create_db(url):
     """Create a database."""
     import os
 
@@ -114,3 +114,47 @@ def create_db(url, library="sqlalchemy"):
     from sqlmodel import SQLModel
 
     SQLModel.metadata.create_all(engine)
+
+
+def generate_revision(revision_name: str = "", directory_name: str = MIGRATIONS_DIR):
+    """Generate a new revision using autogenerate."""
+    import os
+
+    import alembic
+
+    number_of_revisions = len(
+        [
+            file
+            for file in os.listdir(f"{directory_name}/versions")
+            if file.endswith(".py")
+        ]
+    )
+    alembicArgs = [
+        "--raiseerr",
+        "revision",
+        "--autogenerate",
+        "-m",
+        f"v{number_of_revisions + 1}" if not revision_name else f"{revision_name}",
+    ]
+    try:
+        alembic.config.main(argv=alembicArgs)
+        return True
+    except Exception as e:
+        print(e)
+        return False
+
+
+def upgrade_head():
+    import alembic
+
+    alembicArgs = [
+        "--raiseerr",
+        "upgrade",
+        "head",
+    ]
+    try:
+        alembic.config.main(argv=alembicArgs)
+        return True
+    except Exception as e:
+        print(e)
+        return False
