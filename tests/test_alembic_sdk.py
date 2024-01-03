@@ -88,17 +88,6 @@ def test_alembic_sdk(environment):
         import_models_file="tests/import_models_2.py",
     )
 
-    # Delete __pycache__ folders
-    print(red + "Deleting __pycache__ folders")
-
-    def delete_pycache_folders():
-        from alembic_sdk.config import MIGRATIONS_DIR
-
-        directory_name: str = MIGRATIONS_DIR  # 'alembic'
-        shutil.rmtree(f"{directory_name}/__pycache__")
-
-    delete_pycache_folders()
-
     # Generate a new revision
     print(red + "Generating a new revision")
     revision_success = generate_revision()
