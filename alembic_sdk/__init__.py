@@ -1,3 +1,5 @@
+import os
+
 from loguru import logger
 
 from alembic_sdk.config import MIGRATIONS_DIR
@@ -5,7 +7,6 @@ from alembic_sdk.config import MIGRATIONS_DIR
 
 def remove_migration_directory(directory_name=MIGRATIONS_DIR):
     """Remove an existing migration directory."""
-    import os
     import shutil
 
     if os.path.isdir(directory_name):
@@ -17,7 +18,6 @@ def remove_migration_directory(directory_name=MIGRATIONS_DIR):
 
 def remove_alembic_ini():
     """Remove an existing alembic.ini file."""
-    import os
 
     if os.path.isfile("alembic.ini"):
         logger.debug("Removing alembic.ini file")
@@ -101,7 +101,6 @@ def create_engine(url):
 
 def create_db(url):
     """Create a database."""
-    import os
 
     engine = create_engine(url)
 
@@ -116,11 +115,20 @@ def create_db(url):
     SQLModel.metadata.create_all(engine)
 
 
+def delete_pycache_folders():
+    import shutil
+
+    directory_name: str = MIGRATIONS_DIR
+    if os.path.isdir(f"{directory_name}/__pycache__"):
+        shutil.rmtree(f"{directory_name}/__pycache__")
+
+
 def generate_revision(revision_name: str = "", directory_name: str = MIGRATIONS_DIR):
     """Generate a new revision using autogenerate."""
-    import os
 
     import alembic
+
+    delete_pycache_folders()
 
     number_of_revisions = len(
         [
