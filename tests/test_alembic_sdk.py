@@ -92,10 +92,10 @@ def test_alembic_sdk(environment):
     print(red + "Deleting __pycache__ folders")
 
     def delete_pycache_folders():
-        for root, dirs, files in os.walk(".", topdown=False):
-            for name in dirs:
-                if name == "__pycache__":
-                    shutil.rmtree(os.path.join(root, name))
+        from alembic_sdk.config import MIGRATIONS_DIR
+
+        directory_name: str = MIGRATIONS_DIR  # 'alembic'
+        shutil.rmtree(f"{directory_name}/__pycache__")
 
     delete_pycache_folders()
 
