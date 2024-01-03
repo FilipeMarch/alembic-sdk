@@ -55,7 +55,7 @@ def test_alembic_sdk(environment):
     print(red + "Editing the env.py file")
     edit_env_py(
         url="sqlite:///database/database.db",
-        import_models_file="tests/import_models.py",
+        import_models_file="tests/import_models_1.py",
     )
 
     # Generate a new revision
@@ -81,8 +81,41 @@ def test_alembic_sdk(environment):
 
     assert upgrade_success == True
 
-    # # Remove the migration environment.
-    # print(red + "Removing alembic directory and alembic.ini file")
-    # remove_alembic_files()
+    # Edit the env.py file
+    print(red + "Editing the env.py file")
+    edit_env_py(
+        url="sqlite:///database/database.db",
+        import_models_file="tests/import_models_2.py",
+    )
 
-    # assert os.path.isdir("alembic") == False
+    # Delete __pycache__ folders
+    print(red + "Deleting __pycache__ folders")
+
+    def delete_pycache_folders():
+        for root, dirs, files in os.walk(".", topdown=False):
+            for name in dirs:
+                if name == "__pycache__":
+                    shutil.rmtree(os.path.join(root, name))
+
+    delete_pycache_folders()
+
+    # Generate a new revision
+    print(red + "Generating a new revision")
+    revision_success = generate_revision()
+
+    # assert that the revision file was created
+    assert any(
+        f.endswith("v2.py") for f in os.listdir("alembic/versions")
+    ), "v2.py was not created"
+    assert revision_success == True
+
+    # Executing alembic upgrade head
+    print(red + "Alembic upgrade head")
+    upgrade_success = upgrade_head()
+
+    # Remove the migration environment.
+    print(red + "Removing alembic directory and alembic.ini file")
+    remove_alembic_files()
+    delete_database_folder()
+
+    assert os.path.isdir("alembic") == False
