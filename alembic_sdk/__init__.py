@@ -1,8 +1,14 @@
 import os
 
-from loguru import logger
+from alembic_sdk.config import MIGRATIONS_DIR, USE_LOGURU
 
-from alembic_sdk.config import MIGRATIONS_DIR
+if USE_LOGURU:
+    from loguru import logger
+else:
+    import logging
+
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
 
 
 def remove_migration_directory(directory_name=MIGRATIONS_DIR):
