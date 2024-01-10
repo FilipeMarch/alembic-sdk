@@ -1,4 +1,5 @@
 # fmt: off
+import sys
 from logging.config import fileConfig
 
 from alembic import context
@@ -21,7 +22,53 @@ from sqlmodel import Field, SQLModel
 SQLModel.metadata.clear()
 
 ### INSERT NEW MODELS below ###
-### INSERT NEW MODELS above ###
+def load_or_reload_modules_from_import_statements(lines="""
+
+"""):
+    import re
+    lines = lines.split('\n')
+
+    module_names = []
+
+    # Regular expression to match import statements
+    # This version excludes the imported objects and only captures the module names
+    pattern = r'import\s+([a-zA-Z0-9_.]+)|from\s+([a-zA-Z0-9_.]+)\s+import'
+
+    for line in lines:
+        matches = re.findall(pattern, line)
+        for match in matches:
+            # Either the first group (import statement) or the second group (from ... import statement)
+            module_name = match[0] if match[0] else match[1]
+            if module_name:
+                module_names.append(module_name)
+    
+    return module_names
+
+
+module_names = load_or_reload_modules_from_import_statements()
+
+
+if not any([module_name in sys.modules for module_name in module_names]):
+    for module_name in module_names:
+        if module_name not in sys.modules:
+            exec(f"import {module_name}")
+else:
+    # remove all modules from sys.modules
+    for module_name in module_names:
+        if module_name in sys.modules:
+            del sys.modules[module_name]
+            
+    import warnings
+
+    from sqlalchemy import exc as sa_exc
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=sa_exc.SAWarning)
+        for module_name in module_names:
+            if module_name not in sys.modules:
+                exec(f"import {module_name}")
+        
+
 
 convention = {
     "ix": "ix_%(column_0_label)s",
