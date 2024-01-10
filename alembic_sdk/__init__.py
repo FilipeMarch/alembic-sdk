@@ -76,8 +76,12 @@ def edit_env_py(
         import_models_file (str): The file to import models from.
             E.g.: "folder/file_that_import_models.py"
     """
+    current_file_path = os.path.abspath(__file__)
+    current_file_dir = os.path.dirname(current_file_path)
+    env_template_path = f"{current_file_dir}/env_template.py"
+
     # read .env_template.py file
-    with open("alembic_sdk/env_template.py", "r") as file:
+    with open(env_template_path, "r") as file:
         filedata = file.read()
 
     # after config = context.config,
