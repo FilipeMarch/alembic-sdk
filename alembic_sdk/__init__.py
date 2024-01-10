@@ -1,4 +1,5 @@
 import os
+import sys
 
 from alembic_sdk.config import MIGRATIONS_DIR, USE_LOGURU
 
@@ -14,6 +15,11 @@ else:
 def remove_migration_directory(directory_name=MIGRATIONS_DIR):
     """Remove an existing migration directory."""
     import shutil
+
+    script_path = os.path.abspath(sys.argv[0])
+    base_dir = os.path.dirname(script_path)
+
+    directory_name: str = os.path.join(base_dir, MIGRATIONS_DIR)
 
     if os.path.isdir(directory_name):
         logger.debug(f"Removing migration directory at {directory_name}")
@@ -125,10 +131,14 @@ def create_db(url):
     SQLModel.metadata.create_all(engine)
 
 
-def delete_pycache_folders():
+def delete_pycache_folders(dir: str = MIGRATIONS_DIR):
     import shutil
 
-    directory_name: str = MIGRATIONS_DIR
+    script_path = os.path.abspath(sys.argv[0])
+    base_dir = os.path.dirname(script_path)
+
+    directory_name: str = os.path.join(base_dir, MIGRATIONS_DIR)
+
     if os.path.isdir(f"{directory_name}/__pycache__"):
         shutil.rmtree(f"{directory_name}/__pycache__")
 
@@ -138,12 +148,15 @@ def generate_revision(revision_name: str = "", directory_name: str = MIGRATIONS_
 
     import alembic
 
-    delete_pycache_folders()
+    script_path = os.path.abspath(sys.argv[0])
+    base_dir = os.path.dirname(script_path)
+
+    delete_pycache_folders(directory_name)
 
     number_of_revisions = len(
         [
             file
-            for file in os.listdir(f"{directory_name}/versions")
+            for file in os.listdir(f"{os.path.join(base_dir, directory_name)}/versions")
             if file.endswith(".py")
         ]
     )
