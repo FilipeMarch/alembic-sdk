@@ -16,8 +16,10 @@ def remove_migration_directory(directory_name=MIGRATIONS_DIR):
     """Remove an existing migration directory."""
     import shutil
 
-    script_path = os.path.abspath(sys.argv[0])
-    base_dir = os.path.dirname(script_path)
+    script_path = os.path.abspath(sys.argv[0]).split(".venv")[0]
+    base_dir = (
+        os.path.dirname(script_path) if not os.path.isdir(script_path) else script_path
+    )
 
     directory_name: str = os.path.join(base_dir, MIGRATIONS_DIR)
 
@@ -98,7 +100,7 @@ def edit_env_py(
 
     # After the line "### INSERT NEW MODELS below ###"
     # add the models from the models.py file
-    line = "### INSERT NEW MODELS below ###"
+    line = 'def load_or_reload_modules_from_import_statements(lines="""'
     with open(import_models_file, "r") as file:
         models_filedata = file.read()
     filedata = filedata.replace(line, f"{line}\n\n{models_filedata}")
@@ -134,8 +136,10 @@ def create_db(url):
 def delete_pycache_folders(dir: str = MIGRATIONS_DIR):
     import shutil
 
-    script_path = os.path.abspath(sys.argv[0])
-    base_dir = os.path.dirname(script_path)
+    script_path = os.path.abspath(sys.argv[0]).split(".venv")[0]
+    base_dir = (
+        os.path.dirname(script_path) if not os.path.isdir(script_path) else script_path
+    )
 
     directory_name: str = os.path.join(base_dir, MIGRATIONS_DIR)
 
@@ -146,17 +150,21 @@ def delete_pycache_folders(dir: str = MIGRATIONS_DIR):
 def generate_revision(revision_name: str = "", directory_name: str = MIGRATIONS_DIR):
     """Generate a new revision using autogenerate."""
 
-    import alembic
+    from alembic import config
 
-    script_path = os.path.abspath(sys.argv[0])
-    base_dir = os.path.dirname(script_path)
+    script_path = os.path.abspath(sys.argv[0]).split(".venv")[0]
+    base_dir = (
+        os.path.dirname(script_path) if not os.path.isdir(script_path) else script_path
+    )
+
+    migrations_dir_path = os.path.join(base_dir, MIGRATIONS_DIR)
 
     delete_pycache_folders(directory_name)
 
     number_of_revisions = len(
         [
             file
-            for file in os.listdir(f"{os.path.join(base_dir, directory_name)}/versions")
+            for file in os.listdir(f"{migrations_dir_path}/versions")
             if file.endswith(".py")
         ]
     )
@@ -168,7 +176,7 @@ def generate_revision(revision_name: str = "", directory_name: str = MIGRATIONS_
         f"v{number_of_revisions + 1}" if not revision_name else f"{revision_name}",
     ]
     try:
-        alembic.config.main(argv=alembicArgs)
+        config.main(argv=alembicArgs)
         return True
     except Exception as e:
         print(e)
@@ -176,7 +184,7 @@ def generate_revision(revision_name: str = "", directory_name: str = MIGRATIONS_
 
 
 def upgrade_head():
-    import alembic
+    from alembic import config
 
     alembicArgs = [
         "--raiseerr",
@@ -184,7 +192,7 @@ def upgrade_head():
         "head",
     ]
     try:
-        alembic.config.main(argv=alembicArgs)
+        config.main(argv=alembicArgs)
         return True
     except Exception as e:
         print(e)
