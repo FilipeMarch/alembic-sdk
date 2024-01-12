@@ -184,16 +184,11 @@ def generate_revision(revision_name: str = "", directory_name: str = MIGRATIONS_
 
 
 def upgrade_head():
-    from alembic import config
+    import subprocess
 
-    alembicArgs = [
-        "--raiseerr",
-        "upgrade",
-        "head",
-    ]
-    try:
-        config.main(argv=alembicArgs)
-        return True
-    except Exception as e:
-        print(e)
-        return False
+    # Run the subprocess and capture its output
+    result = subprocess.run(
+        ["python", "alembic_sdk/upgrade_head.py"], capture_output=True, text=True
+    )
+
+    return result.returncode == 0
