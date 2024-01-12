@@ -1,2 +1,2 @@
 [run]
-omit = ./alembic_sdk/env_template.py
+omit = ./alembic_sdk/env_template.py, ./alembic_sdk/upgrade_head.py
