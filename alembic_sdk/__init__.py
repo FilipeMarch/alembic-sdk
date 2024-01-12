@@ -186,9 +186,14 @@ def generate_revision(revision_name: str = "", directory_name: str = MIGRATIONS_
 def upgrade_head():
     import subprocess
 
+    current_file_path = os.path.abspath(__file__)
+    current_file_dir = os.path.dirname(current_file_path)
+
     # Run the subprocess and capture its output
     result = subprocess.run(
-        ["python", "alembic_sdk/upgrade_head.py"], capture_output=True, text=True
+        ["python", f"{current_file_dir}/upgrade_head.py"],
+        capture_output=True,
+        text=True,
     )
 
     return result.returncode == 0
