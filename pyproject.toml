@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "alembic-sdk"
-version = "0.1.6"
+version = "0.1.7"
 description = ""
 authors = ["Filipe Marchesini <filipe.marchesini@gmail.com>"]
 readme = "README.md"
